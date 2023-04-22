@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\API\CategoryController;
+use App\Http\Controllers\API\UserController;
+use App\Http\Controllers\BookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -20,13 +23,25 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 
 Route::group(['middleware' => ['auth']], function () {
-    // Protected routes for authenticated users
+
+    Route::get('logout', [UserController::class, "logout"]);
+    Route::get('books', BookController::class);
+    Route::get('books/{book}', BookController::class);
 
     Route::group(['middleware' => ['admin']], function () {
-        // Protected routes for admin users
+        Route::apiResource('categories', CategoryController::class);
+        Route::apiResource('users', UserController::class);
+        Route::post('books', BookController::class);
+        Route::put('books/{book}', BookController::class);
+        Route::delete('books/{book}', BookController::class);
     });
 
     Route::group(['middleware' => ['client']], function () {
         // Protected routes for client users
     });
 });
+
+
+
+Route::post('login', [UserController::class, "login"]);
+Route::post('register', [UserController::class, "store"]);
