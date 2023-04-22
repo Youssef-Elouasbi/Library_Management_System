@@ -17,3 +17,16 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+
+Route::group(['middleware' => ['auth']], function () {
+    // Protected routes for authenticated users
+
+    Route::group(['middleware' => ['admin']], function () {
+        // Protected routes for admin users
+    });
+
+    Route::group(['middleware' => ['client']], function () {
+        // Protected routes for client users
+    });
+});
