@@ -16,6 +16,7 @@ class UserController extends Controller
      * Display a listing of the resource.
      */
 
+
     public function index(Request $request)
     {
         $users = null;
@@ -57,7 +58,7 @@ class UserController extends Controller
 
         $token = $user->createToken('LibraryManagementSystem')->accessToken;
 
-        return response()->json(['token' => $token], 201);
+        return response()->json(['token' => $token, 'message' => "User created successfully", "user" => $user], 201);
     }
 
     /**
@@ -127,7 +128,7 @@ class UserController extends Controller
             /** @var \App\Models\User $user */
             $user = Auth::user();
             $token = $user->createToken('LibraryManagementSystem')->accessToken; // hashed format
-            return response()->json(['token' => $token], 200);
+            return response()->json(['token' => $token, "user" => $user], 200);
         } else {
             return response()->json(['error' => 'Unauthorized'], 401);
         }

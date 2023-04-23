@@ -35,7 +35,7 @@ class CategoryController extends Controller
                 'name' => $request->name
             ]);
 
-            return response()->json(['category' => $category], 201);
+            return response()->json(['category' => $category, 'message' => "Category created successfully"], 201);
         } catch (Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
@@ -65,7 +65,7 @@ class CategoryController extends Controller
                 'name' => $request->name
             ]);
 
-            return response()->json(['category' => $category], 200);
+            return response()->json(['category' => $category, 'message' => "Category updated successfully"], 200);
         } catch (Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }

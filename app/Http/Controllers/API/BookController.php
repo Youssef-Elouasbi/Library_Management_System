@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Controller;
 use App\Models\Book;
 use Exception;
 use Illuminate\Http\Request;
@@ -52,7 +53,7 @@ class BookController extends Controller
                 'available' => true,
             ]);
 
-            return response()->json(['book' => $book], 201);
+            return response()->json(['book' => $book, 'message' => "Book created successfully"], 201);
         } catch (Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
@@ -99,7 +100,7 @@ class BookController extends Controller
                 'available' => $request->available,
             ]);
 
-            return response()->json(['book' => $book], 200);
+            return response()->json(['book' => $book, 'message' => "Book created successfully"], 200);
         } catch (Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
