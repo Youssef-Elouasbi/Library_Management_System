@@ -1,34 +1,51 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useRef, useState } from 'react'
+
+import axiosClient from './axios-client';
+import { useUserContext } from './contexts/UserContext';
 
 function App() {
-  const [count, setCount] = useState(0)
-
+  const emailRef = useRef();
+  const passwordRef = useRef();
+  const [errors, setErrors] = useState({})
+  const { setUser, setToken } = useUserContext()
+  const onSubmit = (e) => {
+    e.preventDefault()
+    const payload = {
+      email: emailRef.current.value,
+      password: passwordRef.current.value,
+    }
+    axiosClient.post('/login', payload)
+      .then(({ data }) => {
+        const user = {
+          id: data.user.id,
+          name: data.user.name,
+          email: data.user.email,
+          role: data.user.role
+        }
+        setUser(user)
+        setToken(data.token)
+      })
+      .catch(err => {
+        if (err) { // validation error && err.response.status == 422
+          setErrors(err.response.data)
+        }
+      })
+  }
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <form onSubmit={onSubmit}>
+      {
+        errors && <div >
+          {
+            Object.keys(errors).map((key) => (
+              <p key={key}> {errors[key]} </p>
+            ))
+          }
+        </div>
+      }
+      <input ref={emailRef} type="email" placeholder='Email' />
+      <input ref={passwordRef} type="password" placeholder='Password' />
+      <input type="submit" value="Login" />
+    </form>
   )
 }
 

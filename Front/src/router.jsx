@@ -1,14 +1,37 @@
 import { Navigate, createBrowserRouter } from 'react-router-dom'
-import Home from './Home'
+import Home from './pages/Client/Home'
 import App from './App'
-import DefaultLayout from './components/DefaultLayout';
-import GuestLayout from './components/GuestLayout';
-import NotFound from './NotFound';
+import GuestLayout from './Layouts/GuestLayout';
+import NotFound from './pages/NotFound';
+import ClientLayout from './Layouts/ClientLayout';
+import AdminLayout from './Layouts/AdminLayout';
+import Login from './pages/Client/Login';
+import SignUp from './pages/Client/SignUp';
+import LoginA from './pages/Admin/LoginA';
+import Dashboard from './pages/Admin/Dashboard';
 
 const router = createBrowserRouter([
     {
+        // path: '/',
+        element: <GuestLayout />,
+        children: [
+            {
+                path: '/login',
+                element: <Login />
+            },
+            {
+                path: '/admin/login',
+                element: <LoginA />
+            },
+            {
+                path: '/signup',
+                element: <SignUp />
+            },
+        ]
+    },
+    {
         path: '/',
-        element: <DefaultLayout />,
+        element: <ClientLayout />,
         children: [
             {
                 path: '/',
@@ -22,13 +45,18 @@ const router = createBrowserRouter([
         ]
     },
     {
-        path: '/',
-        element: <GuestLayout />,
+        // path: '/',
+        element: <AdminLayout />,
         children: [
             {
-                path: '/login',
-                element: <App />
+                path: '/admin',
+                element: <Navigate to="/dashboard" />
             },
+            {
+                path: '/dashboard',
+                element: <Dashboard />
+            },
+
         ]
     },
     {
