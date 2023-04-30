@@ -55,17 +55,22 @@ class ReservationController extends Controller
 
             $reservation = Reservation::create($validatedData);
             $book->update(['available' => false]);
+            $book->decrement('quantity', 1);
 
             return response()->json(['reservation' => $reservation, 'message' => "Reservation was made successfully"], 201);
         } catch (Exception $e) {
-            return response()->json(['message' => 'An error occurred while creating the reservation.'], 500);
+            return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 
 
-    public function show(Reservation $reservation)
+    public function show($id)
     {
         try {
+            $reservation = Reservation::find($id);
+            if (!$reservation) {
+                return response()->json(['message' => 'Reservation not found'], 404);
+            }
             $reservation->load(['book', 'user']);
 
             return response()->json(['reservation' => $reservation], 200);
@@ -97,6 +102,7 @@ class ReservationController extends Controller
         try {
             $book = $reservation->book;
             $book->update(['available' => true]);
+            $book->increment('quantity');
             $reservation->delete();
 
             return response()->json(['message' => 'Reservation deleted successfully'], 200);

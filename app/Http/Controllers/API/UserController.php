@@ -26,11 +26,13 @@ class UserController extends Controller
             $users = User::where('role', 'admin')->get();
         } elseif ($role == 'client') {
             $users = User::where('role', 'client')->get();
+        } elseif (!$role) {
+            $users = User::all();
         }
 
         return response()->json([
             'success' => true,
-            'data' => $users
+            'users' => $users
         ]);
     }
 
@@ -39,34 +41,48 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-            'role' => 'required|string|in:client,admin',
-        ]);
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 400);
+        try {
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users',
+                'password' => 'required|string|min:8',
+                'role' => 'required|string|in:client,admin',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'validation error',
+                    'errors' => $validator->errors()
+                ], 401);
+            }
+
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => bcrypt($request->password),
+                'role' => $request->role,
+            ]);
+
+            $token = $user->createToken('LibraryManagementSystem')->accessToken;
+
+            return response()->json(['token' => $token, 'message' => "User created successfully", "user" => $user], 201);
+            //code...
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
         }
-
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
-            'role' => $request->role,
-        ]);
-
-        $token = $user->createToken('LibraryManagementSystem')->accessToken;
-
-        return response()->json(['token' => $token, 'message' => "User created successfully", "user" => $user], 201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(User $user)
+    public function show($id)
     {
         try {
+            $user = User::find($id);
+            if (!$user) {
+                return response()->json(['message' => 'User not found'], 404);
+            }
             return response()->json($user, 200);
         } catch (Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -91,6 +107,7 @@ class UserController extends Controller
                 return response()->json(['error' => $validator->errors()], 400);
             }
 
+
             // Update the user
             $user->name = $request->input('name');
             $user->email = $request->input('email');
@@ -101,7 +118,7 @@ class UserController extends Controller
             $user->save();
 
             return response()->json(['message' => 'User updated successfully', 'user' => $user]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
@@ -115,32 +132,70 @@ class UserController extends Controller
             // Delete the user
             $user->delete();
             return response()->json(['message' => 'User deleted successfully']);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
     public function login(Request $request)
     {
-        $credentials = $request->only('email', 'password');
+        // $credentials = $request->only('email', 'password');
 
-        if (Auth::attempt($credentials)) {
-            /** @var \App\Models\User $user */
-            $user = Auth::user();
-            $token = $user->createToken('LibraryManagementSystem')->accessToken; // hashed format
-            return response()->json(['token' => $token, "user" => $user], 200);
-        } else {
-            return response()->json(['error' => 'Unauthorized'], 401);
+        // if (Auth::attempt($credentials)) {
+        //     /** @var \App\Models\User $user */
+        //     $user = Auth::user();
+        //     $token = $user->createToken('LibraryManagementSystem')->plainTextToken; // hashed format
+        //     return response()->json(['token' => $token, "user" => $user], 200);
+        // } else {
+        //     return response()->json(['message' => 'Email or Password is incorrect'], 401);
+        // }
+        try {
+            $validateUser = Validator::make(
+                $request->all(),
+                [
+                    'email' => 'required|email',
+                    'password' => 'required'
+                ]
+            );
+
+            if ($validateUser->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'validation error',
+                    'errors' => $validateUser->errors()
+                ], 401);
+            }
+
+            if (!Auth::attempt($request->only(['email', 'password']))) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Email or Password is incorrect',
+                ], 401);
+            }
+
+            $user = User::where('email', $request->email)->first();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'User Logged In Successfully',
+                'token' => $user->createToken("API TOKEN")->plainTextToken,
+                'user' => $user
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 
     public function logout(Request $request)
     {
         try {
-            $request->user()->token()->revoke();
+            $request->user()->tokens()->delete();
             return response()->json(['message' => 'Successfully logged out'], 200);
-        } catch (\Throwable $th) {
-            return response()->json(['message' => 'Error'], 500);
+        } catch (Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 }

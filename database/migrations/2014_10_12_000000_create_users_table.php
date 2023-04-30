@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('password');
             $table->enum('role', ['client', 'admin']);
+            $table->rememberToken();
             $table->timestamps();
         });
     }
@@ -28,4 +29,5 @@ return new class extends Migration
     {
         Schema::dropIfExists('users');
     }
+    // /database/migrations/2014_10_12_000000_create_users_table.php
 };

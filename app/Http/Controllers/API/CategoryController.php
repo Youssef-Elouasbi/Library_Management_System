@@ -37,18 +37,24 @@ class CategoryController extends Controller
 
             return response()->json(['category' => $category, 'message' => "Category created successfully"], 201);
         } catch (Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['message' => "Something went wrong"], 500);
         }
     }
 
-    public function show(Category $category)
+    public function show($id)
     {
+        $category = Category::find($id);
         try {
+            if (!$category) {
+                return response()->json(['message' => 'Category not found'], 404);
+            }
+
             return response()->json(['category' => $category], 200);
         } catch (Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['message' => $e->getMessage()], 500);
         }
     }
+
 
     public function update(Request $request, Category $category)
     {
